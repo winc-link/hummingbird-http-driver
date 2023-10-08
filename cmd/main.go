@@ -12,39 +12,21 @@
  * the License.
  *******************************************************************************/
 
-package cmd
+package main
 
 import (
-	"context"
 	"github.com/winc-link/hummingbird-http-driver/config"
 	"github.com/winc-link/hummingbird-http-driver/internal/driver"
 	"github.com/winc-link/hummingbird-sdk-go/commons"
 	"github.com/winc-link/hummingbird-sdk-go/service"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
 	driverService := service.NewDriverService("hummingbird-http-driver", commons.HummingbirdIot)
 	config.InitConfig(driverService)
-	tcpDriver := driver.NewHttpProtocolDriver(ctx, driverService)
-	go func() {
-		if err := driverService.Start(tcpDriver); err != nil {
-			driverService.GetLogger().Error("driver service start error: %s", err)
-			return
-		}
-	}()
-	waitForSignal(cancel)
-}
-
-func waitForSignal(cancel context.CancelFunc) os.Signal {
-	signalChan := make(chan os.Signal, 1)
-	defer close(signalChan)
-	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
-	s := <-signalChan
-	cancel()
-	signal.Stop(signalChan)
-	return s
+	httpDriver := driver.NewHttpProtocolDriver(driverService)
+	if err := driverService.Start(httpDriver); err != nil {
+		driverService.GetLogger().Error("driver service start error: %s", err)
+		return
+	}
 }

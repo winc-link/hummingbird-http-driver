@@ -1,6 +1,6 @@
 module github.com/winc-link/hummingbird-http-driver
 
-go 1.20
+go 1.18
 
 require github.com/winc-link/hummingbird-sdk-go v0.0.0-20230927074657-56b522b52507
 
