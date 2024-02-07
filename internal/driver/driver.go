@@ -18,10 +18,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/winc-link/hummingbird-http-driver/internal/device"
-	"github.com/winc-link/hummingbird-http-driver/internal/server"
 	"github.com/winc-link/hummingbird-sdk-go/commons"
 	"github.com/winc-link/hummingbird-sdk-go/model"
 	"github.com/winc-link/hummingbird-sdk-go/service"
+	"math/rand"
+	"time"
 )
 
 type HttpProtocolDriver struct {
@@ -78,11 +79,45 @@ func (dr HttpProtocolDriver) HandleServiceExecute(ctx context.Context, deviceId 
 
 // NewHttpProtocolDriver Http协议驱动
 func NewHttpProtocolDriver(sd *service.DriverService) *HttpProtocolDriver {
-	loadDevices(sd)
-	go server.NewHttpService(sd).Start()
+	for _, device := range sd.GetDeviceList() {
+		time.Sleep(10 * time.Second)
+		id := device.Id
+		go func() {
+			ReportData(sd, id)
+		}()
+	}
 	return &HttpProtocolDriver{
 		sd: sd,
 	}
+}
+
+func ReportData(sd *service.DriverService, deviceId string) {
+	for {
+		status, _ := sd.GetConnectStatus(deviceId)
+
+		if status != commons.Offline {
+			sd.Online(deviceId)
+		}
+
+		time.Sleep(5 * time.Second)
+		_, err := sd.PropertyReport(deviceId, model.NewPropertyReport(false, map[string]model.PropertyData{
+			"Ia": model.NewPropertyData(GenerateRangeNum(0, 500)),
+			"Ib": model.NewPropertyData(GenerateRangeNum(0, 500)),
+			"Ic": model.NewPropertyData(GenerateRangeNum(0, 500)),
+			"Ua": model.NewPropertyData(GenerateRangeNum(0, 500)),
+			"Ub": model.NewPropertyData(GenerateRangeNum(0, 500)),
+			"Uc": model.NewPropertyData(GenerateRangeNum(0, 500)),
+		}))
+		if err != nil {
+			return
+		}
+	}
+}
+
+func GenerateRangeNum(min, max int) int {
+	rand.Seed(time.Now().Unix())
+	randNum := rand.Intn(max-min) + min
+	return randNum
 }
 
 // loadDevices 获取所有已经创建成功的设备，保存在内存中。
