@@ -12,31 +12,16 @@
  * the License.
  *******************************************************************************/
 
-package config
+package tool
 
 import (
-	"encoding/json"
-	"github.com/winc-link/hummingbird-sdk-go/service"
+	"crypto/hmac"
+	"crypto/md5"
+	"encoding/hex"
 )
 
-var baseConfig *BaseConfig
-
-type BaseConfig struct {
-	//用户自行定义结构体中信息。
-	TslParamVerify bool `json:"tsl_param_verify"`
-}
-
-func InitConfig(sd *service.DriverService) {
-	customParam := sd.GetCustomParam()
-	baseConfig = &BaseConfig{}
-	if customParam != "" {
-		err := json.Unmarshal([]byte(customParam), &baseConfig)
-		if err != nil {
-			sd.GetLogger().Error(err)
-		}
-	}
-}
-
-func GetConfig() *BaseConfig {
-	return baseConfig
+func HmacMd5(key, data string) string {
+	h := hmac.New(md5.New, []byte(key))
+	h.Write([]byte(data))
+	return hex.EncodeToString(h.Sum([]byte("")))
 }

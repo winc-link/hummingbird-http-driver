@@ -15,31 +15,60 @@
 package server
 
 import (
-	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/winc-link/hummingbird-sdk-go/service"
 	"net/http"
+	"time"
 )
 
+var globalDriverService *service.DriverService
+
 type HttpServer struct {
-	sd *service.DriverService
+	//sd *service.DriverService
 }
 
 func NewHttpService(sd *service.DriverService) *HttpServer {
+	globalDriverService = sd
 	return &HttpServer{
-		sd: sd,
+		//sd: sd,
 	}
 }
 
-func index(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello hummingbird driver http server!")
+func setupRouter() *gin.Engine {
+	gin.SetMode(gin.ReleaseMode)
+	r := gin.Default()
+	r.GET("/ping", func(c *gin.Context) {
+		c.String(200, "pong")
+	})
+
+	auth := r.Group("/api/v1")
+	auth.Use(authHandler())
+	auth.POST("/device/online/:deviceId/:productId", online)
+	auth.POST("/device/sub/online/:deviceId/:productId", subOnline)
+	auth.POST("/device/offline/:deviceId/:productId", offline)
+	auth.POST("/device/sub/offline/:deviceId/:productId", subOffline)
+	auth.POST("/device/thing/property/post/:deviceId/:productId", devicePropertyReport)
+	auth.POST("/device/thing/event/post/:deviceId/:productId", deviceEventReport)
+
+	return r
 }
 
-func (c *HttpServer) Start() {
-
-	http.HandleFunc("/", index)
-	// 启动web服务，用户可以根据项目需要添加相关路由和修改监听端口
-	err := http.ListenAndServe(":9090", nil)
-	if err != nil {
-		c.sd.GetLogger().Error("ListenAndServe: ", err)
+func (c *HttpServer) Start() *http.Server {
+	route := setupRouter()
+	timeout := time.Millisecond * time.Duration(5000)
+	server := &http.Server{
+		Addr:         "0.0.0.0:8090",
+		Handler:      route,
+		WriteTimeout: timeout,
+		ReadTimeout:  timeout,
 	}
+	go func() {
+		err := server.ListenAndServe()
+		if err != nil {
+			globalDriverService.GetLogger().Errorf("Web server start failed: %v", err)
+		}
+	}()
+
+	globalDriverService.GetLogger().Infof("Web server start successful [::%d]", 8090)
+	return server
 }

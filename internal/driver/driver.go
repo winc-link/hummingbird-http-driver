@@ -18,15 +18,16 @@ import (
 	"context"
 	"fmt"
 	"github.com/winc-link/hummingbird-http-driver/internal/device"
+	"github.com/winc-link/hummingbird-http-driver/internal/server"
 	"github.com/winc-link/hummingbird-sdk-go/commons"
 	"github.com/winc-link/hummingbird-sdk-go/model"
 	"github.com/winc-link/hummingbird-sdk-go/service"
-	"math/rand"
-	"time"
+	"net/http"
 )
 
 type HttpProtocolDriver struct {
-	sd *service.DriverService
+	sd         *service.DriverService
+	httpServer *http.Server
 }
 
 // CloudPluginNotify 云插件启动/停止通知
@@ -52,6 +53,7 @@ func (dr HttpProtocolDriver) Stop(ctx context.Context) error {
 	for _, dev := range device.GetAllDevice() {
 		dr.sd.Offline(dev.GetDeviceId())
 	}
+	_ = dr.httpServer.Shutdown(context.Background())
 	return nil
 }
 
@@ -79,50 +81,10 @@ func (dr HttpProtocolDriver) HandleServiceExecute(ctx context.Context, deviceId 
 
 // NewHttpProtocolDriver Http协议驱动
 func NewHttpProtocolDriver(sd *service.DriverService) *HttpProtocolDriver {
-	for _, device := range sd.GetDeviceList() {
-		time.Sleep(10 * time.Second)
-		id := device.Id
-		go func() {
-			ReportData(sd, id)
-		}()
+	httpServer := server.NewHttpService(sd).Start()
+	h := &HttpProtocolDriver{
+		sd:         sd,
+		httpServer: httpServer,
 	}
-	return &HttpProtocolDriver{
-		sd: sd,
-	}
-}
-
-func ReportData(sd *service.DriverService, deviceId string) {
-	for {
-		status, _ := sd.GetConnectStatus(deviceId)
-
-		if status != commons.Offline {
-			sd.Online(deviceId)
-		}
-
-		time.Sleep(5 * time.Second)
-		_, err := sd.PropertyReport(deviceId, model.NewPropertyReport(false, map[string]model.PropertyData{
-			"Ia": model.NewPropertyData(GenerateRangeNum(0, 500)),
-			"Ib": model.NewPropertyData(GenerateRangeNum(0, 500)),
-			"Ic": model.NewPropertyData(GenerateRangeNum(0, 500)),
-			"Ua": model.NewPropertyData(GenerateRangeNum(0, 500)),
-			"Ub": model.NewPropertyData(GenerateRangeNum(0, 500)),
-			"Uc": model.NewPropertyData(GenerateRangeNum(0, 500)),
-		}))
-		if err != nil {
-			return
-		}
-	}
-}
-
-func GenerateRangeNum(min, max int) int {
-	rand.Seed(time.Now().Unix())
-	randNum := rand.Intn(max-min) + min
-	return randNum
-}
-
-// loadDevices 获取所有已经创建成功的设备，保存在内存中。
-func loadDevices(sd *service.DriverService) {
-	for _, dev := range sd.GetDeviceList() {
-		device.PutDevice(dev.DeviceSn, device.NewDevice(dev.Id, dev.DeviceSn, dev.ProductId, dev.Status == commons.DeviceOnline))
-	}
+	return h
 }

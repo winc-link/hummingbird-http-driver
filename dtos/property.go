@@ -12,31 +12,20 @@
  * the License.
  *******************************************************************************/
 
-package config
+package dtos
 
-import (
-	"encoding/json"
-	"github.com/winc-link/hummingbird-sdk-go/service"
-)
+import "github.com/winc-link/hummingbird-sdk-go/model"
 
-var baseConfig *BaseConfig
-
-type BaseConfig struct {
-	//用户自行定义结构体中信息。
-	TslParamVerify bool `json:"tsl_param_verify"`
+// PropertyPost 属性上报
+type PropertyPost struct {
+	Id      string                        `json:"id"`
+	Version string                        `json:"version"`
+	Params  map[string]model.PropertyData `json:"params"`
 }
 
-func InitConfig(sd *service.DriverService) {
-	customParam := sd.GetCustomParam()
-	baseConfig = &BaseConfig{}
-	if customParam != "" {
-		err := json.Unmarshal([]byte(customParam), &baseConfig)
-		if err != nil {
-			sd.GetLogger().Error(err)
-		}
-	}
-}
-
-func GetConfig() *BaseConfig {
-	return baseConfig
+// EventPost 事件上报
+type EventPost struct {
+	Id      string          `json:"id"`
+	Version string          `json:"version"`
+	Params  model.EventData `json:"params"`
 }

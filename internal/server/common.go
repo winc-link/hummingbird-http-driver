@@ -12,31 +12,34 @@
  * the License.
  *******************************************************************************/
 
-package config
+package server
 
 import (
 	"encoding/json"
-	"github.com/winc-link/hummingbird-sdk-go/service"
+	"net/http"
 )
 
-var baseConfig *BaseConfig
+const (
+	UrlParamDeviceId  = "deviceId"
+	UrlParamProductId = "productId"
+)
 
-type BaseConfig struct {
-	//用户自行定义结构体中信息。
-	TslParamVerify bool `json:"tsl_param_verify"`
-}
+const (
+	ContentType     = "Content-Type"
+	ContentTypeCBOR = "application/cbor"
+	ContentTypeJSON = "application/json"
+	ContentTypeYAML = "application/x-yaml"
+	ContentTypeText = "text/plain"
+	ContentTypeXML  = "application/xml"
+	AcceptLanguage  = "Accept-Language"
+)
 
-func InitConfig(sd *service.DriverService) {
-	customParam := sd.GetCustomParam()
-	baseConfig = &BaseConfig{}
-	if customParam != "" {
-		err := json.Unmarshal([]byte(customParam), &baseConfig)
-		if err != nil {
-			sd.GetLogger().Error(err)
-		}
+func encode(i interface{}, w http.ResponseWriter) {
+	w.Header().Add(ContentType, ContentTypeJSON)
+	enc := json.NewEncoder(w)
+	err := enc.Encode(i)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
-}
-
-func GetConfig() *BaseConfig {
-	return baseConfig
 }

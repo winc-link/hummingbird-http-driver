@@ -1,4 +1,4 @@
-ARG BASE=golang:1.17-alpine
+ARG BASE=golang:1.18-alpine
 FROM ${BASE} AS builder
 
 
@@ -12,6 +12,8 @@ RUN go build -ldflags "-s -w" -o  ./cmd/build/driver-linux-amd64  ./cmd
 FROM alpine:3.12
 
 COPY --from=builder /simple-driver/cmd/build/driver-linux-amd64 /app/
+
+EXPOSE 8090
 
 RUN mkdir /logs
 
