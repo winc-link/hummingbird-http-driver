@@ -43,12 +43,12 @@ func setupRouter() *gin.Engine {
 
 	auth := r.Group("/api/v1")
 	auth.Use(authHandler())
-	auth.POST("/device/online/:deviceId/:productId", online)
-	auth.POST("/device/sub/online/:deviceId/:productId", subOnline)
-	auth.POST("/device/offline/:deviceId/:productId", offline)
-	auth.POST("/device/sub/offline/:deviceId/:productId", subOffline)
-	auth.POST("/device/thing/property/post/:deviceId/:productId", devicePropertyReport)
-	auth.POST("/device/thing/event/post/:deviceId/:productId", deviceEventReport)
+	auth.POST("/device/online/:deviceId/:productId", online) //设备在线
+	//auth.POST("/device/sub/online/:deviceId/:productId", subOnline)                     //子设备在线
+	auth.POST("/device/offline/:deviceId/:productId", offline) //设备离线
+	//auth.POST("/device/sub/offline/:deviceId/:productId", subOffline)                   //子设备离线
+	auth.POST("/device/thing/property/post/:deviceId/:productId", devicePropertyReport) //设备属性上报
+	auth.POST("/device/thing/event/post/:deviceId/:productId", deviceEventReport)       //设备事件上报
 
 	return r
 }

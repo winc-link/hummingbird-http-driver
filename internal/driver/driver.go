@@ -16,7 +16,6 @@ package driver
 
 import (
 	"context"
-	"fmt"
 	"github.com/winc-link/hummingbird-http-driver/internal/device"
 	"github.com/winc-link/hummingbird-http-driver/internal/server"
 	"github.com/winc-link/hummingbird-sdk-go/commons"
@@ -32,20 +31,17 @@ type HttpProtocolDriver struct {
 
 // CloudPluginNotify 云插件启动/停止通知
 func (dr HttpProtocolDriver) CloudPluginNotify(ctx context.Context, t commons.CloudPluginNotifyType, name string) error {
-	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
 // DeviceNotify 设备添加/修改/删除通知
 func (dr HttpProtocolDriver) DeviceNotify(ctx context.Context, t commons.DeviceNotifyType, deviceId string, device model.Device) error {
-	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
 // ProductNotify 产品添加/修改/删除通知
 func (dr HttpProtocolDriver) ProductNotify(ctx context.Context, t commons.ProductNotifyType, productId string, product model.Product) error {
-	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
 // Stop 驱动退出通知。
@@ -59,24 +55,17 @@ func (dr HttpProtocolDriver) Stop(ctx context.Context) error {
 
 // HandlePropertySet 设备属性设置
 func (dr HttpProtocolDriver) HandlePropertySet(ctx context.Context, deviceId string, data model.PropertySet) error {
-	_, ok := dr.sd.GetDeviceById(deviceId)
-	if !ok {
-		return fmt.Errorf(" device [%s] not found", deviceId)
-	}
-
 	return nil
 }
 
 // HandlePropertyGet 设备属性查询
 func (dr HttpProtocolDriver) HandlePropertyGet(ctx context.Context, deviceId string, data model.PropertyGet) error {
-	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
 // HandleServiceExecute 设备服务调用
 func (dr HttpProtocolDriver) HandleServiceExecute(ctx context.Context, deviceId string, data model.ServiceExecuteRequest) error {
-	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
 // NewHttpProtocolDriver Http协议驱动
