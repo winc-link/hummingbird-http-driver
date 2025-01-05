@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/gin-gonic/gin v1.9.1
-	github.com/winc-link/hummingbird-sdk-go v0.0.0-20231029081056-0fbd6a6e006c
+	github.com/winc-link/hummingbird-sdk-go v0.0.0-20241218060555-0a5bdb7ad540
 )
 
 require (
