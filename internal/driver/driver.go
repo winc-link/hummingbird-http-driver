@@ -16,7 +16,6 @@ package driver
 
 import (
 	"context"
-	"github.com/winc-link/hummingbird-http-driver/internal/device"
 	"github.com/winc-link/hummingbird-http-driver/internal/server"
 	"github.com/winc-link/hummingbird-sdk-go/commons"
 	"github.com/winc-link/hummingbird-sdk-go/model"
@@ -27,11 +26,6 @@ import (
 type HttpProtocolDriver struct {
 	sd         *service.DriverService
 	httpServer *http.Server
-}
-
-// CloudPluginNotify 云插件启动/停止通知
-func (dr HttpProtocolDriver) CloudPluginNotify(ctx context.Context, t commons.CloudPluginNotifyType, name string) error {
-	return nil
 }
 
 // DeviceNotify 设备添加/修改/删除通知
@@ -46,10 +40,12 @@ func (dr HttpProtocolDriver) ProductNotify(ctx context.Context, t commons.Produc
 
 // Stop 驱动退出通知。
 func (dr HttpProtocolDriver) Stop(ctx context.Context) error {
-	for _, dev := range device.GetAllDevice() {
-		dr.sd.Offline(dev.GetDeviceId())
+	for _, d := range dr.sd.GetDeviceList() {
+		err := dr.sd.Offline(d.Id)
+		if err != nil {
+			return err
+		}
 	}
-	_ = dr.httpServer.Shutdown(context.Background())
 	return nil
 }
 

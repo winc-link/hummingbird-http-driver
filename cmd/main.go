@@ -17,12 +17,11 @@ package main
 import (
 	"github.com/winc-link/hummingbird-http-driver/config"
 	"github.com/winc-link/hummingbird-http-driver/internal/driver"
-	"github.com/winc-link/hummingbird-sdk-go/commons"
 	"github.com/winc-link/hummingbird-sdk-go/service"
 )
 
 func main() {
-	driverService := service.NewDriverService("hummingbird-official-http-driver", commons.HummingbirdIot)
+	driverService := service.NewDriverService("official-http-driver-v2")
 	config.InitConfig(driverService)
 	httpDriver := driver.NewHttpProtocolDriver(driverService)
 	if err := driverService.Start(httpDriver); err != nil {
