@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/gin-gonic/gin v1.9.1
-	github.com/winc-link/hummingbird-sdk-go v0.0.0-20250205034442-274be98fbda1
+	github.com/winc-link/hummingbird-sdk-go v0.0.0-20250527055146-fe95567a6dd0
 )
 
 require (
@@ -33,7 +33,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
-	github.com/winc-link/edge-driver-proto v0.0.0-20250202082005-d2ba4a4e3ef5 // indirect
+	github.com/winc-link/edge-driver-proto v0.0.0-20250527031342-adc1bd4485c0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
