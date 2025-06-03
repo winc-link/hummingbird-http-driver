@@ -18,14 +18,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/winc-link/hummingbird-http-driver/config"
 	constants "github.com/winc-link/hummingbird-http-driver/constant"
 	"github.com/winc-link/hummingbird-http-driver/dtos"
 	"github.com/winc-link/hummingbird-http-driver/internal/pkg/convert"
 	"github.com/winc-link/hummingbird-sdk-go/model"
 	"reflect"
 	"strconv"
-	"time"
 )
 
 // offline 设备离线
@@ -108,7 +106,7 @@ func subOnline(c *gin.Context) {
 func devicePropertyReport(c *gin.Context) {
 	deviceId := c.Param(UrlParamDeviceId)
 	productId := c.Param(UrlParamProductId)
-	propertyPost := new(dtos.PropertyPost)
+	propertyPost := new(model.PropertyReport)
 	if err := c.ShouldBind(propertyPost); err != nil {
 		encode(dtos.Response{
 			Success:      false,
@@ -116,47 +114,22 @@ func devicePropertyReport(c *gin.Context) {
 			ErrorMessage: string(constants.ErrorCodeMsgMap[constants.FormatErrorCode]),
 		}, c.Writer)
 	}
+	_, ok := globalDriverService.GetDeviceById(deviceId)
 	var propertyPostReply dtos.Response
-	var delPropertyCode []string
-	for code, param := range propertyPost.Params {
-		if property, ok := globalDriverService.GetProductPropertyByCode(productId, code); !ok {
-			delPropertyCode = append(delPropertyCode, code)
-			continue
-		} else {
-			value := param.Value
-			if config.GetConfig().TslParamVerify {
-				//推送一条错误消息到客户端
-				if verifyErrorCode, verifyErrorMsg := verifyParam(property, param); verifyErrorCode != constants.DefaultSuccessCode {
-					delPropertyCode = append(delPropertyCode, code)
-					propertyPostReply.Code = int(verifyErrorCode)
-					propertyPostReply.Success = false
-					propertyPostReply.ErrorMessage = string(verifyErrorMsg)
-					encode(propertyPostReply, c.Writer)
-					return
-				}
-			}
-			if param.Time == 0 {
-				propertyPost.Params[code] = model.PropertyData{
-					Time:  time.Now().UnixMilli(),
-					Value: value,
-				}
-			}
-		}
+	if !ok {
+		propertyPostReply.Code = int(constants.DeviceNotFound)
+		propertyPostReply.Success = false
+		propertyPostReply.ErrorMessage = string(constants.ErrorCodeMsgMap[constants.DeviceNotFound])
 	}
 
-	filterPropertyPost := propertyPost.Params
-	for _, code := range delPropertyCode {
-		delete(filterPropertyPost, code)
-	}
-	propertyPost.Params = filterPropertyPost
-	if len(propertyPost.Params) == 0 {
-		propertyPostReply.Code = int(constants.PropertyCodeNotFound)
+	_, ok = globalDriverService.GetProductById(productId)
+	if !ok {
+		propertyPostReply.Code = int(constants.ProductNotFound)
 		propertyPostReply.Success = false
-		propertyPostReply.ErrorMessage = string(constants.ErrorCodeMsgMap[constants.PropertyCodeNotFound])
-		encode(propertyPostReply, c.Writer)
-		return
+		propertyPostReply.ErrorMessage = string(constants.ErrorCodeMsgMap[constants.ProductNotFound])
 	}
-	_, err := globalDriverService.PropertyReport(deviceId, model.NewPropertyReport(true, propertyPost.Params))
+
+	_, err := globalDriverService.PropertyReport(deviceId, model.NewPropertyReport(propertyPost.CommonRequest, propertyPost.Data))
 	if err != nil {
 		propertyPostReply.Code = int(constants.SystemErrorCode)
 		propertyPostReply.Success = false
@@ -174,29 +147,30 @@ func devicePropertyReport(c *gin.Context) {
 func deviceEventReport(c *gin.Context) {
 	deviceId := c.Param(UrlParamDeviceId)
 	productId := c.Param(UrlParamProductId)
-	eventPost := new(dtos.EventPost)
-	if err := c.ShouldBind(eventPost); err != nil {
+	var eventPost model.EventReport
+	if err := c.ShouldBind(&eventPost); err != nil {
 		encode(dtos.Response{
 			Success:      false,
 			Code:         int(constants.FormatErrorCode),
 			ErrorMessage: string(constants.ErrorCodeMsgMap[constants.FormatErrorCode]),
 		}, c.Writer)
 	}
-
+	_, ok := globalDriverService.GetDeviceById(deviceId)
 	var eventPostReply dtos.Response
-	_, ok := globalDriverService.GetProductEventByCode(productId, eventPost.Params.EventCode)
 	if !ok {
-		eventPostReply.Code = int(constants.EventCodeNotFound)
+		eventPostReply.Code = int(constants.DeviceNotFound)
 		eventPostReply.Success = false
-		eventPostReply.ErrorMessage = string(constants.ErrorCodeMsgMap[constants.EventCodeNotFound]) + fmt.Sprintf(" %s is undefined", eventPost.Params.EventCode)
-		encode(eventPost, c.Writer)
-		return
+		eventPostReply.ErrorMessage = string(constants.ErrorCodeMsgMap[constants.DeviceNotFound])
 	}
 
-	if eventPost.Params.EventTime == 0 {
-		eventPost.Params.EventTime = time.Now().UnixMilli()
+	_, ok = globalDriverService.GetProductById(productId)
+	if !ok {
+		eventPostReply.Code = int(constants.ProductNotFound)
+		eventPostReply.Success = false
+		eventPostReply.ErrorMessage = string(constants.ErrorCodeMsgMap[constants.ProductNotFound])
 	}
-	_, err := globalDriverService.EventReport(deviceId, model.NewEventReport(true, eventPost.Params))
+
+	_, err := globalDriverService.EventReport(deviceId, eventPost)
 	if err != nil {
 		eventPostReply.Code = int(constants.SystemErrorCode)
 		eventPostReply.Success = false

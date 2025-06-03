@@ -18,14 +18,10 @@ import "github.com/winc-link/hummingbird-sdk-go/model"
 
 // PropertyPost 属性上报
 type PropertyPost struct {
-	Id      string                        `json:"id"`
-	Version string                        `json:"version"`
-	Params  map[string]model.PropertyData `json:"params"`
+	model.PropertyReport
 }
 
 // EventPost 事件上报
 type EventPost struct {
-	Id      string          `json:"id"`
-	Version string          `json:"version"`
-	Params  model.EventData `json:"params"`
+	model.EventReport
 }
