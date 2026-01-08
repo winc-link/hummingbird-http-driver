@@ -21,7 +21,7 @@ import (
 )
 
 func main() {
-	driverService := service.NewDriverService("official-http-driver-v2.7")
+	driverService := service.NewDriverService("official-http-driver-v3.0")
 	config.InitConfig(driverService)
 	httpDriver := driver.NewHttpProtocolDriver(driverService)
 	if err := driverService.Start(httpDriver); err != nil {

@@ -16,16 +16,42 @@ package driver
 
 import (
 	"context"
+	"errors"
+	"github.com/spf13/cast"
 	"github.com/winc-link/hummingbird-http-driver/internal/server"
 	"github.com/winc-link/hummingbird-sdk-go/commons"
 	"github.com/winc-link/hummingbird-sdk-go/model"
 	"github.com/winc-link/hummingbird-sdk-go/service"
 	"net/http"
+	"time"
 )
 
 type HttpProtocolDriver struct {
 	sd         *service.DriverService
 	httpServer *http.Server
+}
+
+func (dr HttpProtocolDriver) HandlePropertyReportDebug(ctx context.Context, deviceId string, data model.PropertyReport) error {
+	data.Time = time.Now().UnixMilli()
+	newData := make(map[string]interface{})
+	for k, v := range data.Data {
+		newData[k] = cast.ToFloat64(v)
+	}
+	data.Data = newData
+	resp, _ := dr.sd.PropertyReport(deviceId, data)
+	if resp.Success != true {
+		return errors.New(resp.ErrorMessage)
+	}
+	return nil
+}
+
+func (dr HttpProtocolDriver) HandleEventReportDebug(ctx context.Context, deviceId string, data model.EventReport) error {
+	data.Time = time.Now().UnixMilli()
+	resp, _ := dr.sd.EventReport(deviceId, data)
+	if resp.Success != true {
+		return errors.New(resp.ErrorMessage)
+	}
+	return nil
 }
 
 // DeviceNotify 设备添加/修改/删除通知
